@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tonights Plot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Delius+Unicase:wght@400;700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 10px 30px;
+            background-color: white;
+            color: black;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+            position: fixed; 
+            z-index: 10;
+        }
+
+        #refresh-button {
+            position: absolute;
+            top: 20px; 
+            right: 75px;
+            padding: 10px 20px;
+            background-color: #f04;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #refresh-button:hover {
+            background-color: #c03;
+        }
+
+        .main-content {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            padding-top: 75px;
+            z-index: 1;
+        }
+
+        .hamburger {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 25px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .hamburger div {
+            height: 3px;
+            background-color: #999;
+            border-radius: 2px;
+        }
+
+        .title {
+            font-family: 'Roboto', serif;
+            font-weight: bold;
+            font-size: 30px;
+            letter-spacing: 1px;
+            margin-left: 30px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            color: black;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        #map {
+            height: 80%;
+            width: 50%;
+            position: absolute;
+            transition: margin-left 0.3s ease;
+            z-index: 0;
+            box-shadow: 0 -4px 0px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar {
+            position: absolute; 
+            top: 60px;          
+            left: -500px;       
+            width: 250px;
+            height: 100%;       
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s ease;
+            padding: 20px;
+            z-index: 9; 
+        }
+        #sidebar a {
+            display: block;
+            color: black;
+            text-decoration: none;
+            padding: 15px 0;
+            border-bottom: 1px solid #ccc;
+            font-size: 18px;
+        }
+        #sidebar a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .event-container {
+            width: 50%;
+            overflow-y: scroll;
+            padding: 20px;
+            margin-left: 50%;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+        .event-label {
+            text-align: center;
+            font-family: 'Roboto', serif;
+            font-weight: bold;
+            font-size: 32px;
+            color: black;
+            width: 100%;
+            padding: 0px 0; 
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 100;
+        }
+        .popup-box {
+            position: fixed;
+            top: 75px;
+            left: 75px;
+            right: 75px;
+            bottom: 75px;
+            background-color: white;
+            overflow-y: auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 101;
+            display: none;
+        }
+        .popup-box h3, .popup-box p {
+            margin: 10px 0;
+        }
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #000;
+            cursor: pointer;
+        }
+        .popup-box h3 {
+            margin-top: 10px 0;
+        }
+        .popup-box img {
+            width: 50%;
+            height: 50vh;
+            object-fit: cover;
+            border-bottom: 1px solid #ccc;
+            display: block; 
+            margin-bottom: 10px;
+        }
+        .popup-box .popup-content-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 10px;
+        }
+        .popup-box .popup-image {
+            flex: 1;
+            height: 40vh;
+            display: flex;
+            max-width: 50%;
+            max-height: 50%;
+            margin-right: 15px;
+        }
+        .popup-box .popup-image img {
+            width: 100%;
+            height: 100%;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+        .popup-box .popup-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        .popup-box .popup-description {
+            flex-basis: 100%;
+            margin-top: 15px;
+        }
+        .popup-box .popup-details h3 {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 10px;
+        }
+        .popup-box .popup-details .details {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        .popup-box p {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+        .popup-box .title-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .popup-box .title-section h3 {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            flex-grow: 1;
+        }
+        .popup-box .title-section .details {
+            font-size: 14px;
+            text-align: right;
+            margin-left: 15px;
+        }
+
+        .filter-container {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .filter-button {
+            margin-top: 70px;
+            background-color: lightgray;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+            border-radius: 5px; 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+        }
+        .filter-button:hover {
+            background-color: #ccc;
+        }
+
+        .filter-dropdown {
+            width: 100%; 
+            height: 325px;
+            max-height: 0; 
+            overflow: hidden;
+            background-color: rgba(255, 255, 255); 
+            transition: max-height 0.1s ease-out; 
+            position: fixed;
+            top: 55px; 
+            left: 0;
+            z-index: 1000; 
+            padding: 10px;
+        }
+        .filter-dropdown.active {
+            max-height: 325px;
+            margin-top: 15px;
+            padding: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .filter-dropdown label {
+            display: block;
+            margin: 10px 0;
+        }
+        .filter-dropdown .slider-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .filter-dropdown .slider-container div {
+            flex: 1;
+        }
+        .filter-dropdown .slider-container .cost-slider {
+            margin-left: 30px;
+        }
+
+        .slider-label {
+            font-size: 16px;
+            font-weight: bold;
+            padding-left: 25px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .slider {
+            width: 60%;
+            height: 5px;
+            margin-left: 25px;
+            background: #ddd;
+            outline: none;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #000;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #000;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        #slider-value {
+            display: block;
+            margin-top: 10px;
+            font-size: 16px;
+            margin-left: 25px;
+            font-weight: bold;
+        }
+
+        .tags-container {
+            width: 75%;
+            margin-top: 10px;
+            margin-left: 30px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 3px; 
+            max-height: 200px;
+            overflow-y: auto; 
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .tag {
+            display: flex;
+            align-items: center; 
+        }
+        .tag input {
+            margin-right: 5px;
+        }
+
+        .apply-filter-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 40px;
+            padding: 10px 20px;
+            background-color: #6b6b6b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .apply-filter-btn:hover {
+            background-color: #343434; 
+        }
+        .grid-container {
+            padding-top: 50px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto; 
+            gap: 10px; 
+        }
+        .grid-item {
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            height: 250px;
+        }
+        .grid-item img {
+            width: 100%;
+            height: 60%;
+            object-fit: cover;
+            border-bottom: 1px solid #ccc;
+        }
+        .grid-item h4 {
+            margin: 10px;
+            text-align: center;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            #map {
+                width: 100%;
+                height: 300px;
+            }
+            .event-container {
+                width: 100%;
+                padding: 15px;
+                margin-top: 300px;
+                margin-left: 20px;
+            }
+            .grid-container {
+                grid-template-columns: 1fr 1fr;
+            }
+            .grid-item {
+                font-size: 18px;
+                padding: 25px;
+                height: 200px; 
+            }
+        }
+        @media (max-width: 480px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            .grid-item {
+                height: 180px; 
+            }
+        }
+
+        .grid-item.hover-active {
+            transform: translateY(-5px); 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); 
+        }
+        .grid-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            .title {
+                font-size: 18px;
+            }
+            .hamburger div {
+                height: 2px;
+            }
+            #map {
+                height: 300px;
+            }
+            .event-label {
+                text-align: center;
+                font-family: 'Roboto', serif;
+                font-weight: bold;
+                font-size: 32px;
+                color: black;
+                width: 100%;  
+                padding: 0px 0;
+                margin-top: 20px; 
+            }
+            .grid-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px; 
+            }
+            .grid-item {
+                font-size: 18px;
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay" style="
+        position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.3);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+    "></div>
+        
+    <div id="loading-spinner" style="
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        display: none;
+    ">
+        <div style="
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #333;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        "></div>
+    </div>
+
+    <div id="app-content">
+        <header class="header">
+        <div class="hamburger" onclick="toggleSidebar()">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <a href="index.html" class="title">WTM in SD Tonight?</a>
+        <button id="refresh-button">Refresh Map</button>
+        </header>
+        <div class="main-content">
+            <div id="map"></div>
+            <div class="event-container">
+                <div class="event-label"> Events Happening Tonight </div>
+                <div class="filter-container">
+                    <button id="filter-button" class="filter-button">Filter Events</button>
+                </div>
+            
+                <div id="filter-dropdown" class="filter-dropdown">
+                    <div class="slider-container">
+                        <div class="distance-slider">
+                            <label for="distance-slider" class="slider-label">Distance</label>
+                            <input type="range" id="distance-slider" class="slider" min="1" max="50" value="50">
+                            <span id="slider-value">50 miles</span>
+                        </div>
+                
+                        <div class="cost-slider" style="margin-left: 30px;">
+                            <label for="cost-slider" class="slider-label">Max Cost</label>
+                            <input type="range" id="cost-slider" class="slider" min="0" max="100" value="100">
+                            <span id="cost-slider-value">100</span>
+                        </div>
+                    </div>
+
+                    <div id="tags-container" class="tags-container">
+                        <!-- Tags will be populated here -->
+                    </div>
+                
+                    <button id="apply-filter-btn" class="apply-filter-btn">Apply Filter</button>
+                </div>
+            
+                <div class="grid-container" id="event-grid">
+                    <!-- Event Boxes Will Appear Here -->
+                </div>
+            </div>
+        </div>
+
+        <div id="popup-overlay" class="popup-overlay"></div>
+        <div id="popup-box" class="popup-box">
+            <span id="close-popup" class="close-popup">&times;</span>
+            <div id="popup-content"></div>
+        </div>
+
+        <div id="sidebar">
+        <a href="#">Recently Viewed</a>
+        </div>
+    
+        <script>
+            /**
+             * Fetching all data from events.json
+             * events.json will be rewritten with filters
+             * Apply filters button will recall fetch
+             **/
+            
+            fetch('/api/events')
+            .then(response => response.json())
+            .then(events => {
+                console.log(events);
+                initMap(events);
+                populateEventGrid(events);
+                populateTags(events);
+            })
+            .catch(error => console.error('Error loading events.json:', error));
+            
+            let map;
+            let markers = [];
+
+            // function to recall fetch with new info
+            async function fetchEventsAndInitMap() {
+                const response = await fetch('/api/events'); 
+                const events = await response.json();
+                initMap(events); 
+                populateEventGrid(events);
+            }
+
+            // initialize Google Maps
+            function initMap(events) {
+                const sanDiego = { lat: 32.7157, lng: -117.1611 };
+
+                if (!map) {
+                    map = new google.maps.Map(document.getElementById("map"), {
+                        zoom: 12,
+                        center: sanDiego,
+                        fullscreenControl: false,
+                        streetViewControl: false,
+                        styles: [
+                            {
+                                featureType: "poi",
+                                elementType: "labels",
+                                stylers: [{ visibility: "off" }]
+                            },
+                            {
+                                featureType: "transit.station",
+                                stylers: [{ visibility: "off" }]
+                            }
+                        ]
+                    });
+                }
+
+                // clear markers 
+                markers.forEach(marker => marker.marker.setMap(null));
+                markers = [];
+
+                // add events to map
+                events.forEach(event => {
+                    const marker = new google.maps.Marker({
+                        position: { lat: event.venue.lat, lng: event.venue.lng },
+                        map: map,
+                        title: event.name,
+                        icon: {
+                            url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                        },
+                    });
+
+                    markers.push({ marker, event });
+
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `<h3>${event.name}</h3><p>${event.desc}</p><p><strong>When:</strong> ${event.time}</p>`,
+                    });
+
+                    marker.addListener("click", () => {
+                        infoWindow.open(map, marker);
+                    });
+
+                    marker.addListener("mouseover", () => {
+                        marker.setIcon({
+                            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                        });
+                    });
+
+                    marker.addListener("mouseout", () => {
+                        marker.setIcon({
+                            url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                        });
+                    });
+                });
+            }
+
+            function populateEventGrid(events) {
+                const eventGrid = document.getElementById('event-grid');
+                eventGrid.innerHTML = '';
+
+                events.forEach((event, index) => {
+                    const gridItem = document.createElement('div');
+                    gridItem.classList.add('grid-item');
+
+                    gridItem.innerHTML = `
+                        <img src="${event.lrgImg}" alt="${event.name}">
+                        <h4>${event.name}</h4>
+                    `;
+
+                    gridItem.dataset.event = JSON.stringify(event);
+
+                    gridItem.addEventListener('mouseover', () => {
+                        markers[index].marker.setIcon({
+                            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                        });
+                    });
+
+                    gridItem.addEventListener('mouseout', () => {
+                        markers[index].marker.setIcon({
+                            url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                        });
+                    });
+
+                    gridItem.addEventListener('click', openPopup);
+
+                    eventGrid.appendChild(gridItem);
+                });
+            }
+
+            document.getElementById('refresh-button').addEventListener('click', () => {
+                fetchEventsAndInitMap();
+            });
+
+            fetchEventsAndInitMap();
+
+            let recentlyViewed = [];
+
+            function addToRecentlyViewed(event) {
+                recentlyViewed.push(event);
+                
+                if (recentlyViewed.length > 10) {
+                    recentlyViewed.pop();
+                }
+                
+                updateSidebar();
+            }
+
+            function updateSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.innerHTML = '<a href="#">Recently Viewed</a>'; 
+
+                recentlyViewed.forEach((event, index) => {
+                    const eventLink = document.createElement('a');
+                    eventLink.textContent = event.name; 
+                    eventLink.onclick = (e) => {
+                        e.preventDefault(); 
+                        console.log("Clicked on:", event);
+                        openSidebarPopup(event); 
+                        removeFromRecentlyViewed(index);
+                    };
+                    sidebar.appendChild(eventLink);
+                });
+            }
+
+            function removeFromRecentlyViewed(index) {
+                recentlyViewed.splice(index, 1); 
+                updateSidebar(); 
+            }
+            function openSidebarPopup(eventDetails) {
+                const overlay = document.getElementById('popup-overlay');
+                const popupBox = document.getElementById('popup-box');
+                const popupContent = document.getElementById('popup-content');
+                const mapsLink = `https://www.google.com/maps?q=${encodeURIComponent(eventDetails.venue.address)}`;
+
+                overlay.style.display = 'block';
+                popupBox.style.display = 'block';
+
+                removeFromRecentlyViewed(eventDetails);
+
+                popupContent.innerHTML = `
+                    <div class="popup-content-wrapper">
+                        <div class="popup-image">
+                            <img src="${eventDetails.lrgImg}" alt="${eventDetails.name}">
+                        </div>
+                        <div class="popup-details">
+                            <h3>${eventDetails.name}</h3>
+                            <div class="details">
+                                <p><strong>Address:</strong> <a href="${mapsLink}" target="_blank">${eventDetails.venue.address}</a></p>
+                                <p><strong>When:</strong> ${eventDetails.time}</p>
+                                <p><strong>Cost:</strong> $${eventDetails.cost}</p>
+                            </div>
+                        </div>
+                        <div class="popup-description">
+                            <p><strong>Description:</strong> ${eventDetails.desc}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            function openPopup(event) {
+                const gridItem = event.currentTarget;
+                const eventData = gridItem.dataset.event;
+                const overlay = document.getElementById('popup-overlay');
+                const popupBox = document.getElementById('popup-box');
+                const popupContent = document.getElementById('popup-content');
+                const eventDetails = JSON.parse(eventData);
+                const mapsLink = `https://www.google.com/maps?q=${encodeURIComponent(eventDetails.venue.address)}`;
+
+                overlay.style.display = 'block';
+                popupBox.style.display = 'block';
+
+                addToRecentlyViewed(eventDetails);
+
+                popupContent.innerHTML = `
+                    <div class="popup-content-wrapper">
+                        <div class="popup-image">
+                            <img src="${eventDetails.lrgImg}" alt="${eventDetails.name}">
+                        </div>
+                        <div class="popup-details">
+                            <h3>${eventDetails.name}</h3>
+                            <div class="details">
+                                <p><strong>Address:</strong> <a href="${mapsLink}" target="_blank">${eventDetails.venue.address}</a></p>
+                                <p><strong>When:</strong> ${eventDetails.time}</p>
+                                <p><strong>Cost:</strong> $${eventDetails.cost}</p>
+                            </div>
+                        </div>
+                        <div class="popup-description">
+                            <p><strong>Description:</strong> ${eventDetails.desc}</p>
+                        </div>
+                    </div>
+                `;
+
+                document.querySelectorAll('.grid-item').forEach(item => {
+                    item.classList.remove('hover-active');
+                });
+                gridItem.classList.add('hover-active');
+            }
+            function closePopup() {
+                const overlay = document.getElementById('popup-overlay');
+                const popupBox = document.getElementById('popup-box');
+                const gridItem = document.querySelector('.hover-active');
+
+                overlay.style.display = 'none';
+                popupBox.style.display = 'none';
+
+                if (gridItem) {
+                    gridItem.classList.remove('hover-active');
+                }
+            }
+
+            // listeners
+            document.getElementById('filter-button').addEventListener('click', function() {
+                const dropdown = document.getElementById('filter-dropdown');
+                
+                dropdown.classList.toggle('active');
+            });
+            document.addEventListener('keydown', function(event) {
+                if (event.key === "Escape") {
+                    closeDropdown();
+                }
+            });
+            document.addEventListener('keydown', function(event) {
+                if (event.key === "Escape") {
+                    closePopup();
+                }
+            });
+            document.getElementById('close-popup').addEventListener('click', closePopup);
+            document.getElementById('popup-overlay').addEventListener('click', closePopup);
+            document.getElementById('apply-filter-btn').addEventListener('click', function() {
+                applyFilter();
+
+                const dropdown = document.getElementById('filter-dropdown');
+                dropdown.classList.remove('active');
+            });
+            document.addEventListener('click', closeSidebarOnClickOrScroll);
+            document.addEventListener('scroll', function() {
+                var sidebar = document.getElementById('sidebar');
+                if (sidebar.style.left === '0px') {
+                    sidebar.style.left = '-500px';
+                }
+            });
+            
+            const distanceSlider = document.getElementById("distance-slider");
+            const sliderValue = document.getElementById("slider-value");
+            
+            const costSlider = document.getElementById("cost-slider");
+            const costSliderValue = document.getElementById("cost-slider-value");
+
+            distanceSlider.addEventListener("input", function() {
+                sliderValue.textContent = `${distanceSlider.value} miles`;
+            });
+
+            costSlider.addEventListener("input", function() {
+                costSliderValue.textContent = `$${costSlider.value}`;
+            });
+
+            function populateTags(events) {
+                const tagsContainer = document.getElementById('tags-container');
+                const allTags = new Set();
+
+                events.forEach(event => {
+                    event.tags.forEach(tag => {
+                        allTags.add(tag);
+                    });
+                });
+
+                const sortedTags = Array.from(allTags).sort();
+
+                sortedTags.forEach(tag => {
+                    const tagElement = document.createElement('div');
+                    tagElement.classList.add('tag');
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = tag; 
+                    checkbox.value = tag;
+
+                    const label = document.createElement('label');
+                    label.htmlFor = tag; 
+                    label.textContent = tag;
+
+                    tagElement.appendChild(checkbox);
+                    tagElement.appendChild(label);
+
+                    tagsContainer.appendChild(tagElement);
+                });
+            }
+            
+            document.getElementById('apply-filter-btn').addEventListener('click', function() {
+                const distance = document.getElementById("distance-slider").value;
+                const cost = document.getElementById("cost-slider").value;
+
+                const selectedTags = [];
+                const tagCheckboxes = document.querySelectorAll('.tags-container input[type="checkbox"]:checked');
+                tagCheckboxes.forEach(checkbox => {
+                    selectedTags.push(checkbox.value);
+                });
+
+                const tagsQuery = selectedTags.length > 0 ? `&tags=${selectedTags.join(',')}` : '';
+
+                const url = `/api/apply-filter?distance=${distance}&cost=${cost}${tagsQuery}`;
+
+                fetch(url, {
+                    method: "POST"
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(error => console.error("Error:", error));
+            });
+
+            function closeDropdown() {
+                const dropdown = document.getElementById('filter-dropdown');
+                dropdown.classList.remove('active');
+            }
+
+            function applyFilter() {
+                const distanceValue = document.getElementById('distance-slider').value;
+                const costValue = document.getElementById('cost-slider').value;
+
+                const selectedTags = [];
+                const tagCheckboxes = document.querySelectorAll('.tags-container input[type="checkbox"]:checked');
+                tagCheckboxes.forEach(checkbox => {
+                    selectedTags.push(checkbox.value);
+                });
+
+                const tagsQuery = selectedTags.length > 0 ? `&tags=${selectedTags.join(',')}` : '';
+                const url = `/api/apply-filter?distance=${distanceValue}&cost=${costValue}${tagsQuery}`;
+
+                setTimeout(() => {
+                    fetch('filtered.json')
+                    .then(response => response.json())
+                    .then(events => {
+                        initMap(events);
+                        populateEventGrid(events);
+                    })
+                    .catch(error => console.error("Error loading filtered.json:", error));
+                        }, 1000);
+
+                
+            }
+
+            document.getElementById('apply-filter-btn').addEventListener('click', function() {
+                applyFilter();
+                const dropdown = document.getElementById('filter-dropdown');
+                dropdown.classList.remove('active');
+            });
+
+            function toggleSidebar() {
+                var sidebar = document.getElementById('sidebar');
+                if (sidebar.style.left === '0px') {
+                    sidebar.style.left = '-500px';
+                } else {
+                    sidebar.style.left = '0px';
+                }
+            }
+
+            function closeSidebarOnClickOrScroll(event) {
+                var sidebar = document.getElementById('sidebar');
+                
+                if (sidebar.style.left === '0px') {
+                    if (!sidebar.contains(event.target) && event.target !== document.querySelector('.hamburger') && event.target !== document.querySelector('.title')) {
+                        sidebar.style.left = '-500px';
+                    }
+                }
+            }
+
+            window.addEventListener("load", () => {
+                const spinner = document.getElementById("loading-spinner");
+                spinner.style.display = "block"; // show spinner
+                const overlay = document.getElementById("loading-overlay");
+                overlay.style.diplay = "block";
+
+                fetch('http://localhost:8080/api/refresh', {
+                    method: 'POST'
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log("Backend responded:", data);
+                    return fetch('events.json?timestamp=' + new Date().getTime());
+                })
+                .then(response => response.json())
+                .then(events => {
+                    initMap(events);
+                    populateEventGrid(events);
+                    populateTags(events);
+                })
+                .catch(error => {
+                    console.error("Error during refresh or loading events:", error);
+                })
+                .finally(() => {
+                    spinner.style.display = "none"; // hide spinner
+                    overlay.style.display = "none";
+                    fetchEventsAndInitMap();
+                });
+            });
+
+        </script>
+
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBrVJcEjxWMAqtDrFsPuUWLZeB8_DLwqMk&callback=initMap" async defer></script>
+    </div>
+</body>
+</html>
